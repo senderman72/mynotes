@@ -68,13 +68,24 @@ class _LoginviewState extends State<Loginview> {
                   context,
                 ).pushNamedAndRemoveUntil(notesRoute, (route) => false);
               } on FirebaseAuthException catch (e) {
+                devtools.log(
+                  'Caught FirebaseAuthException: ${e.code} - ${e.message}',
+                );
                 if (e.code == 'user-not-found') {
-                  devtools.log('User not found');
+                  await showErrorDialog(context, 'User not found');
                 } else if (e.code == 'wrong-password') {
-                  devtools.log('Wrong Password');
+                  await showErrorDialog(context, 'Wrong password');
+                } else if (e.code == 'invalid-credential') {
+                  await showErrorDialog(
+                    context,
+                    'Invalid credentials. Please check your email and password.',
+                  );
+                } else {
+                  await showErrorDialog(
+                    context,
+                    'Authentication error: ${e.message}',
+                  );
                 }
-              } catch (e) {
-                devtools.log('something bad happened');
               }
             },
             child: const Text('Login'),
@@ -91,4 +102,24 @@ class _LoginviewState extends State<Loginview> {
       ),
     );
   }
+}
+
+Future<void> showErrorDialog(BuildContext context, String text) {
+  return showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('An error occured'),
+        content: Text(text),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
 }
